@@ -113,7 +113,7 @@ def Move(midline,L1_dot,L2_dot,theta_dot,OUTPUT):
     new_midline[:,1]=new_body
     new_midline[:,2]=new_tail+new_body
     return new_midline
-def get_input_output(midline,DATA_circle):
+def get_input_output(midline,DATA_circle,R):
     NUM_FISH=midline.shape[1]
     r=DATA_circle[2]
     head=midline[:,:,0,:]-midline[:,:,1,:]
@@ -129,7 +129,6 @@ def get_input_output(midline,DATA_circle):
     theta=angle_between_2vec(-head, tail, axis=2)
     L1=np.linalg.norm(head, axis=2)
     L2=np.linalg.norm(tail, axis=2)
-    R=300
     Observed_vector=midline[:,None,:,1,:]-midline[:,:,None,1,:]
     Observed_distance=np.linalg.norm(Observed_vector, axis=3)
     Observed_phi=angle_between_2vec(head[:,:,None,:], Observed_vector, axis=3)

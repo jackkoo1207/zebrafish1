@@ -120,7 +120,7 @@ def train_model(model, INPUT1,INPUT2,OUTPUT, NUM_BATCH,DATA_SIZE,batch_size,epoc
 def test_model(model,initial_midline,Test_frame,DATA_circle,R,grid,bool_have_wall):
     NUM_FISH=initial_midline.shape[0]
     new_midline=np.zeros((Test_frame,NUM_FISH, 3, 2))
-    new_Observed_index=np.zeros((Test_frame-1,NUM_FISH, NUM_FISH))
+    new_Observed_index=np.zeros((Test_frame-1,NUM_FISH, NUM_FISH),dtype=bool)
     new_Observed_distance=np.zeros((Test_frame-1,NUM_FISH, NUM_FISH))
     new_Observed_phi=np.zeros((Test_frame-1,NUM_FISH, NUM_FISH))
     new_Observed_head_phi=np.zeros((Test_frame-1,NUM_FISH, NUM_FISH))
@@ -131,7 +131,7 @@ def test_model(model,initial_midline,Test_frame,DATA_circle,R,grid,bool_have_wal
     new_Radius=np.zeros((Test_frame-1, NUM_FISH))
     new_global_head_phi=np.zeros((Test_frame-1, NUM_FISH))
     new_midline[0]=initial_midline
-    Predict_output=np.zeros((Test_frame, 2, 6))
+    Predict_output=np.zeros((Test_frame, NUM_FISH, 6))
     r=DATA_circle[2]
     with torch.no_grad():
         for i in tqdm(range(Test_frame-1)):

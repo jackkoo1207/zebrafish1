@@ -42,7 +42,7 @@ def Global_Local_animate(midline,L1,L2,theta,global_head_phi,Radius,Observed_dis
             circle=plt.Circle(((r-Radius[i,Observer_index])*np.cos(-global_head_phi[i,Observer_index]), -(r-Radius[i,Observer_index])*np.sin(-global_head_phi[i,Observer_index])), r, color='r',fill=False)
         ax2.add_patch(circle)
     return FuncAnimation(fig, animate, frames=Frame_interval, repeat=False)
-def Local_discrete_animate(L1,L2,theta,global_head_phi,Radius,Observed_distance,Observed_phi,Observed_index,Observed_head_phi,r,R,Observer_index=0,t_start=0,Frame_interval=100):
+def Local_discrete_animate(L1,L2,theta,global_head_phi,Radius,Observed_distance,Observed_phi,Observed_index,Observed_head_phi,r,R,grid,Observer_index=0,t_start=0,Frame_interval=100):
     fig, [ax1,ax2] = plt.subplots(nrows=1, ncols=2)
     def animate(i):
         ax1.clear()
@@ -67,7 +67,7 @@ def Local_discrete_animate(L1,L2,theta,global_head_phi,Radius,Observed_distance,
         if Radius[i,Observer_index]!=-1:
             circle=plt.Circle(((r-Radius[i,Observer_index])*np.cos(-global_head_phi[i,Observer_index]), -(r-Radius[i,Observer_index])*np.sin(-global_head_phi[i,Observer_index])), r, color='r',fill=False)
         ax1.add_patch(circle)
-        Image=DiscreteImage(i, Observer_index=Observer_index,Observed_index=Observed_index,Observed_distance=Observed_distance,Observed_phi=Observed_phi,L1=L1,L2=L2,theta=theta,Radius=Radius,global_head_phi=global_head_phi,Observed_head_phi=Observed_head_phi)
+        Image=DiscreteImage(Observed_index=Observed_index[i,Observer_index],Observed_distance=Observed_distance[i,Observer_index],Observed_phi=Observed_phi[i,Observer_index],L1=L1[i],L2=L2[i],theta=theta[i],Radius=Radius[i,Observer_index],global_head_phi=global_head_phi[i,Observer_index],Observed_head_phi=Observed_head_phi[i,Observer_index],grid=grid,R=R,r=r)
         ax2.imshow(np.sum(Image, axis=0))
         ax2.invert_yaxis()
     return FuncAnimation(fig, animate, frames=Frame_interval, repeat=False)
