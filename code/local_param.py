@@ -1,24 +1,21 @@
 import numpy as np
-R=300
-grid=64
-scale=(grid//2)/R
-DATA_circle=np.load('data_circle/2.npy')
-x,y,r=DATA_circle
+
 def angle_between_2vec(vec1, vec2, axis=2):
     """Calculate the angle between two vectors."""
     return np.arctan2(
         np.cross(vec1, vec2, axis=axis),
         np.sum(vec1 * vec2, axis=axis)
     )
-def local_param(midline,r,R):
-    new_head                =new_midline[:,0,:]-new_midline[:,1,:]
-    new_tail                =new_midline[:,2,:]-new_midline[:,1,:]
-    new_position            =new_midline[:,1,:]-DATA_circle[None,:2]
+def local_param(midline,DATA_circle,R):
+    r=DATA_circle[2]
+    new_head                =midline[:,0,:]-midline[:,1,:]
+    new_tail                =midline[:,2,:]-midline[:,1,:]
+    new_position            =midline[:,1,:]-DATA_circle[None,:2]
     new_global_head_phi  =angle_between_2vec(new_head,-new_position, axis=1)
     new_theta            =angle_between_2vec(-new_head, new_tail, axis=1)
     new_L1               =np.linalg.norm(new_head, axis=1)
     new_L2               =np.linalg.norm(new_tail, axis=1)
-    new_Observed_vector     =new_midline[None,:,1,:]-new_midline[:,None,1,:]
+    new_Observed_vector     =midline[None,:,1,:]-midline[:,None,1,:]
     new_Observed_distance=np.linalg.norm(new_Observed_vector, axis=2)
     new_Observed_phi     =angle_between_2vec(new_head[:,None,:], new_Observed_vector, axis=2)
     new_Observed_head_phi=angle_between_2vec(new_Observed_vector,new_head[None,:,:], axis=2)
@@ -57,7 +54,8 @@ def mid_point_circle_algorithm(radius):
             d += 2 * y - 2 * x + 1  # 水平方向移動
 
     return points
-def DiscreteImage(L1,L2,theta,global_head_phi,Radius,Observed_distance,Observed_phi,Observed_index,Observed_head_phi):
+def DiscreteImage(L1,L2,theta,global_head_phi,Radius,Observed_distance,Observed_phi,Observed_index,Observed_head_phi,grid,R,r):
+    scale=(grid//2)/R
     Each_obs_index=Observed_index
     CM_x=Observed_distance[Each_obs_index]*np.cos(Observed_phi[Each_obs_index])
     CM_y=Observed_distance[Each_obs_index]*np.sin(Observed_phi[Each_obs_index])
@@ -115,3 +113,43 @@ def Move(midline,L1_dot,L2_dot,theta_dot,OUTPUT):
     new_midline[:,1]=new_body
     new_midline[:,2]=new_tail+new_body
     return new_midline
+def get_input_output(midline,DATA_circle):
+    NUM_FISH=midline.shape[1]
+    r=DATA_circle[2]
+    head=midline[:,:,0,:]-midline[:,:,1,:]
+    tail=midline[:,:,2,:]-midline[:,:,1,:]
+    def angle_between_2vec(vec1, vec2, axis=2):
+        """Calculate the angle between two vectors."""
+        return np.arctan2(
+            np.cross(vec1, vec2, axis=axis),
+            np.sum(vec1 * vec2, axis=axis)
+        )
+    position=midline[:,:,1,:]-DATA_circle[None,None,:2]
+    global_head_phi=angle_between_2vec(head,-position, axis=2)
+    theta=angle_between_2vec(-head, tail, axis=2)
+    L1=np.linalg.norm(head, axis=2)
+    L2=np.linalg.norm(tail, axis=2)
+    R=300
+    Observed_vector=midline[:,None,:,1,:]-midline[:,:,None,1,:]
+    Observed_distance=np.linalg.norm(Observed_vector, axis=3)
+    Observed_phi=angle_between_2vec(head[:,:,None,:], Observed_vector, axis=3)
+    Observed_head_phi=angle_between_2vec(Observed_vector,head[:,None,:,:], axis=3)
+    Observed_index=Observed_distance<=R
+    Radius=r-np.linalg.norm(position, axis=2)
+    Radius[Radius>R]=-1
+    angular_speed= angle_between_2vec(head[:-1,:,:],head[1:,:,:], axis=2)
+    velocity =midline[1:,:,1,:]-midline[:-1,:,1,:]
+    speed=np.linalg.norm(velocity, axis=2)
+    velocity_phi=angle_between_2vec(head[:-1,:,:],velocity,axis=2)
+    v_para=speed*np.cos(velocity_phi)
+    v_norm=speed*np.sin(velocity_phi)
+    L1_dot=L1[1:]-L1[:-1]
+    L2_dot=L2[1:]-L2[:-1]
+    theta_dot=theta[1:]-theta[:-1]
+    INPUT1=np.stack([global_head_phi[:-1],Radius[:-1]],axis=2)
+    INPUT2=np.stack([np.tile(L1[:-1,None],(1,NUM_FISH,1)),np.tile(L2[:-1,None],(1,NUM_FISH,1)),np.tile(theta[:-1,None],(1,NUM_FISH,1)),Observed_distance[:-1],Observed_phi[:-1],Observed_index[:-1],Observed_head_phi[:-1]],axis=3)
+    OUTPUT=np.stack([L1_dot,L2_dot,theta_dot,v_para,v_norm,angular_speed],axis=2)
+    INPUT1=INPUT1.reshape(-1,2)
+    INPUT2=INPUT2.reshape(-1,NUM_FISH,7)
+    OUTPUT=OUTPUT.reshape(-1,6)
+    return INPUT1, INPUT2, OUTPUT
